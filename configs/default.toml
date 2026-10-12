@@ -1,0 +1,47 @@
+# Every tunable lives here; nothing is hard-coded in src/.
+[data]
+raw_dir = "../hwtransfer/data/highd"   # highD CSVs (01_tracks.csv, ...), relative to the repo root
+out_dir = "data"
+min_speed_ms = 10.0          # ego must be moving (drops queueing)
+obs_s = 5.0                  # observation window; the decision time t0 is its last frame
+ego_class = "Car"            # the system under test is a passenger-car ADAS
+max_gap_m = 250.0
+
+[predictors]
+ttc_eps_ms = 0.1             # closing speed below this counts as "not closing"
+ttc_critical_s = 3.0         # for time-exposed TTC (TIT)
+psd_brake_ms2 = 6.0          # reference braking for proportion of stopping distance
+rss_rho_s = 0.5
+rss_b_min = 4.0
+rss_b_max = 8.0
+
+[stress]                      # braking stress test of an ACC + AEB system
+dt_s = 0.02
+horizon_s = 10.0
+lead_decel_ms2 = [3.0, 5.0, 7.0]
+lead_brake_s = [1.0, 2.0]          # the lead brakes for this long, then holds its speed
+aeb_ttc_s = [1.2, 1.8]
+sensor_delay_s = [0.1, 0.3]
+max_brake_ms2 = [7.0, 9.0]
+actuator_tau_s = 0.2
+sigma_gap_m = 0.4
+sigma_speed_ms = 0.15
+acc_k1 = 0.23                # constant time-gap ACC gains (Milanes and Shladover 2014)
+acc_k2 = 0.07
+acc_time_gap_s = 1.5
+acc_standstill_m = 2.0
+acc_max_decel = 3.0
+acc_max_accel = 2.0
+acc_speed_gain = 0.4           # holds the ego's own speed at t0 as the set speed
+seed = 20261012
+
+[analysis]
+bootstrap = 400
+risk_thresholds = [0.0, 0.05, 0.25]    # contact in any stress case / in at least 5% / in at least 25% of them
+data_sizes_recordings = [1, 2, 4, 8, 16, 32]
+size_repeats = 200
+evt_thetas_s = [4.0, 3.0, 2.5]
+evt_tail_quantile = 0.90
+evt_sizes = [500, 1000, 2000, 5000, 10000, 20000, 40000]
+evt_repeats = 300
+seed = 7
