@@ -2,9 +2,21 @@
 
 **How much data does a traffic-safety metric need before you can trust it?** I tested 18 surrogate safety measures (time to collision, time headway, braking demand and others) on 139,410 real car-following situations from the highD drone dataset, scored each against a braking stress test of a cruise-control and emergency-braking system, and measured how much data it takes to reach a conclusion, to estimate rare close calls, and to assess a new road without simulating it.
 
+![ranking](results/figures/ranking.png)
+
+## At a glance
+
+| question | answer |
+|---|---|
+| Which safety metric tracks a braking stress test? | Time-to-collision family: Spearman **0.44**. Time headway, the usual following-distance metric: **0.10**. |
+| Can one metric find the most dangerous situations? | Required braking (DRAC) separates the 253 worst of 139,410 at AUROC **0.997**. |
+| How much data does it take to pick the right metric family? | **One** recording (about 2,400 situations): right in 100% of 200 random subsets. |
+| How much data to estimate a rare close call? | An extreme-value tail model is within a factor 2 of the truth in **90%** of 5,000-situation samples; counting gets 75%. |
+| Can a new road be assessed without simulating it? | Yes: **2.9%** median error on its mean risk from 10,000 situations of other roads. |
+
 ## What I did
 
-- **Data.** highD: 60 drone recordings of German highways at 25 Hz, six locations, 79,830 passenger-car followers. I cut every following episode into non-overlapping 5 s windows; the end of the window is the decision time. That gives **139,410 decisions**. My bumper-to-bumper gap, rebuilt from positions, matches the dataset's own `dhw` column to within 0.01 m.
+- **Data.** [highD](https://www.highd-dataset.com/) (free for non-commercial research after registration; not redistributed here): 60 drone recordings of German highways at 25 Hz, six locations, 79,830 passenger-car followers. I cut every following episode into non-overlapping 5 s windows; the end of the window is the decision time. That gives **139,410 decisions**. My bumper-to-bumper gap, rebuilt from positions, matches the dataset's own `dhw` column to within 0.01 m.
 - **Stress test (the "risk" label).** From the real gap and speeds at the decision time, the lead vehicle brakes (3, 5 or 7 m/s² for 1 or 2 s) and the following car is replaced by a system under test: a constant time-gap cruise control (ACC) plus an automatic emergency brake (AEB) that reacts to its own delayed, noisy time-to-collision measurement. 48 system settings (AEB trigger, sensor delay, brake strength, braking severity). A decision's **risk** is the share of the 48 stress cases that end in contact. 15.3% of decisions have risk above 0; 253 have risk of at least 0.25.
 - **Predictors.** 18 metrics computed only from the window up to the decision time (an automated test checks nothing from after it is used): 9 at the decision instant and 9 summarising the 5 s before it.
 - **Questions.** (1) Which metric tracks the stress test, with bootstrap intervals that resample whole recordings. (2) Does a combined model or the 5 s history beat the best single metric. (3) How many recordings does it take to find the best metric. (4) How many decisions does it take to estimate the frequency of rare close calls, by counting or by an extreme-value (generalised Pareto) tail. (5) Can metrics calibrated on other sites replace simulation at a new site.
@@ -12,8 +24,6 @@
 ## Results
 
 **1. Time-to-collision metrics track the stress test; time headway does not.**
-
-![ranking](results/figures/ranking.png)
 
 | metric | Spearman with risk (95% CI) | AUROC, any contact | AUROC, risk >= 0.25 |
 |---|---|---|---|
@@ -66,6 +76,7 @@ Reproduce:
 
 ```bash
 pip install -e .[dev]
+# put the highD CSVs (01_tracks.csv, 01_tracksMeta.csv, 01_recordingMeta.csv, ...) in data/highd/
 python -m riskpred.ingest        # about 1 min
 python -m riskpred.stress        # about 4 min
 python -m riskpred.cli analyze   # about 40 min (mostly the site-transfer study)
@@ -86,3 +97,11 @@ Python, NumPy, pandas, SciPy, scikit-learn (gradient boosting, isotonic calibrat
 
 ## Data and credits
 The highD dataset is **not redistributed here**. It is described in [arXiv:1810.05642](https://arxiv.org/abs/1810.05642) and available from [highd-dataset.com](https://www.highd-dataset.com/) under its own terms of use. Download it, put the recording csv files under `data/highd`, and run the steps above. This repository contains only code and aggregate results and figures derived from the data, no per-vehicle data.
+
+## Related projects
+
+Four studies on the safety validation of automated driving, all on real data: [AFALS](https://github.com/sriyaaa2003/afals) (falsifying the assumptions of a safety-proven cruise controller), **risk-predictors** (this one), [cutin-atlas](https://github.com/sriyaaa2003/cutin-atlas) (parameterizing, clustering and efficiently simulating real cut-ins) and [synth-mix](https://github.com/sriyaaa2003/synth-mix) (synthetic weather imagery for object detectors).
+
+## License
+
+MIT, see [LICENSE](LICENSE). highD data are subject to the highD terms of use.

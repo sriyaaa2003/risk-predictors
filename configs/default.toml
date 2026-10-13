@@ -1,6 +1,6 @@
 # Every tunable lives here; nothing is hard-coded in src/.
 [data]
-raw_dir = "../hwtransfer/data/highd"   # highD CSVs (01_tracks.csv, ...), relative to the repo root
+raw_dir = "data/highd"   # highD CSVs (01_tracks.csv, 01_tracksMeta.csv, ...), relative to the repo root
 out_dir = "data"
 min_speed_ms = 10.0          # ego must be moving (drops queueing)
 obs_s = 5.0                  # observation window; the decision time t0 is its last frame
